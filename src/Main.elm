@@ -1,40 +1,96 @@
 module Main exposing (..)
 
 import Html exposing (..)
-
-
---should be useful in a few minutes:
---import Html.Attributes exposing (..)
---import Html.Events exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
 
 
 type Msg
-    = WhaitWutNoMessageHere
+    = NewTodoChange String
+    | AddTodo
+    | RemoveTodo Int
+    | ToggleTodo Int Bool
 
 
-model : { data : String }
 model =
-    { data = "world"
+    { lastTodoId = 2
+    , todos =
+        [ { id = 1, text = "todo 1", done = False }
+        , { id = 2, text = "todo 2", done = False }
+        ]
+    , newTodo = ""
     }
 
 
-view : { a | data : String } -> Html msg
 view model =
-    --say hello
-    text ("Hello " ++ model.data)
+    let
+        todoClass todo =
+            if todo.done then
+                "done"
+            else
+                ""
+
+        todoView todo =
+            li
+                [ class (todoClass todo)
+                , onClick (todo.done |> not |> ToggleTodo todo.id)
+                ]
+                [ div [] [ text todo.text ]
+                , button [ onClick (RemoveTodo todo.id) ] [ text "x" ]
+                ]
+    in
+        div []
+            [ ul []
+                (model.todos |> List.map todoView)
+            , div []
+                [ input
+                    [ value model.newTodo
+                    , onInput NewTodoChange
+                    ]
+                    []
+                , button
+                    [ onClick AddTodo ]
+                    [ text "+" ]
+                ]
+            ]
 
 
-update : a -> b -> b
 update msg model =
-    --update does not change model
-    model
+    case msg of
+        NewTodoChange newTodoText ->
+            { model | newTodo = newTodoText }
+
+        AddTodo ->
+            let
+                newTodoId =
+                    model.lastTodoId + 1
+
+                newTodo =
+                    { id = newTodoId, text = model.newTodo, done = False }
+
+                newModel =
+                    { model
+                        | todos = newTodo :: model.todos
+                        , lastTodoId = newTodoId
+                        , newTodo = ""
+                    }
+            in
+                if String.length model.newTodo > 0 then
+                    newModel
+                else
+                    model
+
+        RemoveTodo id ->
+            model
+
+        ToggleTodo id isDone ->
+            model
 
 
 
 -- behold, the main part to glue it all together
 
 
-main : Program Never { data : String } msg
 main =
     Html.beginnerProgram
         { view = view
