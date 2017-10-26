@@ -70,7 +70,7 @@ update msg model =
 
                 newModel =
                     { model
-                        | todos = newTodo :: model.todos
+                        | todos = model.todos ++ [newTodo]
                         , lastTodoId = newTodoId
                         , newTodo = ""
                     }
