@@ -3,15 +3,23 @@ module Main exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Todo
 
 
 type Msg
     = NewTodoChange String
     | AddTodo
-    | RemoveTodo Int
-    | ToggleTodo Int Bool
+    | TodoMsg Todo.Msg
 
 
+type alias Model =
+    { lastTodoId : Int
+    , newTodo : String
+    , todos : List Todo.Todo
+    }
+
+
+model : Model
 model =
     { lastTodoId = 2
     , todos =
@@ -22,39 +30,24 @@ model =
     }
 
 
+view : Model -> Html Msg
 view model =
-    let
-        todoClass todo =
-            if todo.done then
-                "done"
-            else
-                ""
-
-        todoView todo =
-            li
-                [ class (todoClass todo)
-                , onClick (todo.done |> not |> ToggleTodo todo.id)
+    div []
+        [ Html.map TodoMsg (Todo.view model.todos)
+        , div []
+            [ input
+                [ value model.newTodo
+                , onInput NewTodoChange
                 ]
-                [ div [] [ text todo.text ]
-                , button [ onClick (RemoveTodo todo.id) ] [ text "x" ]
-                ]
-    in
-        div []
-            [ ul []
-                (model.todos |> List.map todoView)
-            , div []
-                [ input
-                    [ value model.newTodo
-                    , onInput NewTodoChange
-                    ]
-                    []
-                , button
-                    [ onClick AddTodo ]
-                    [ text "+" ]
-                ]
+                []
+            , button
+                [ onClick AddTodo ]
+                [ text "+" ]
             ]
+        ]
 
 
+update : Msg -> Model -> Model
 update msg model =
     case msg of
         NewTodoChange newTodoText ->
@@ -70,7 +63,7 @@ update msg model =
 
                 newModel =
                     { model
-                        | todos = model.todos ++ [newTodo]
+                        | todos = model.todos ++ [ newTodo ]
                         , lastTodoId = newTodoId
                         , newTodo = ""
                     }
@@ -80,22 +73,8 @@ update msg model =
                 else
                     model
 
-        RemoveTodo id ->
-            let
-                notOfId todo =
-                    todo.id /= id
-            in
-                { model | todos = model.todos |> List.filter notOfId }
-
-        ToggleTodo id isDone ->
-            let
-                changeDoneForId todo =
-                    if todo.id == id then
-                        { todo | done = isDone }
-                    else
-                        todo
-            in
-                { model | todos = model.todos |> List.map changeDoneForId }
+        TodoMsg todoMsg ->
+            { model | todos = Todo.update todoMsg model.todos }
 
 
 
