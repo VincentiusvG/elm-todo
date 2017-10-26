@@ -81,10 +81,21 @@ update msg model =
                     model
 
         RemoveTodo id ->
-            model
+            let
+                notOfId todo =
+                    todo.id /= id
+            in
+                { model | todos = model.todos |> List.filter notOfId }
 
         ToggleTodo id isDone ->
-            model
+            let
+                changeDoneForId todo =
+                    if todo.id == id then
+                        { todo | done = isDone }
+                    else
+                        todo
+            in
+                { model | todos = model.todos |> List.map changeDoneForId }
 
 
 
