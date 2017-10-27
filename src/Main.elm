@@ -3,11 +3,13 @@ module Main exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import KeyDown exposing (..)
 import Todo
 
 
 type Msg
     = NewTodoChange String
+    | NewTodoKeyDown Int
     | AddTodo
     | TodoMsg Todo.Msg
 
@@ -38,6 +40,7 @@ view model =
             [ input
                 [ value model.newTodo
                 , onInput NewTodoChange
+                , onKeyDown NewTodoKeyDown
                 ]
                 []
             , button
@@ -49,38 +52,46 @@ view model =
 
 update : Msg -> Model -> Model
 update msg model =
-    case msg of
-        NewTodoChange newTodoText ->
-            { model | newTodo = newTodoText }
+    let
+        addTodo model =
+            if String.length model.newTodo > 0 then
+                let
+                    newTodoId =
+                        model.lastTodoId + 1
 
-        AddTodo ->
-            let
-                newTodoId =
-                    model.lastTodoId + 1
-
-                newTodo =
-                    { id = newTodoId, text = model.newTodo, done = False }
-
-                newModel =
+                    newTodo =
+                        { id = newTodoId, text = model.newTodo, done = False }
+                in
                     { model
                         | todos = model.todos ++ [ newTodo ]
                         , lastTodoId = newTodoId
                         , newTodo = ""
                     }
-            in
-                if String.length model.newTodo > 0 then
-                    newModel
+            else
+                model
+    in
+        case msg of
+            NewTodoChange newTodoText ->
+                { model | newTodo = newTodoText }
+
+            AddTodo ->
+                addTodo model
+
+            NewTodoKeyDown keyCode ->
+                if keyCode == 13 then
+                    addTodo model
                 else
                     model
 
-        TodoMsg todoMsg ->
-            { model | todos = Todo.update todoMsg model.todos }
+            TodoMsg todoMsg ->
+                { model | todos = Todo.update todoMsg model.todos }
 
 
 
 -- behold, the main part to glue it all together
 
 
+main : Program Never Model Msg
 main =
     Html.beginnerProgram
         { view = view

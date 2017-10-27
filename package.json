@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "elm-live": "elm-live src/Main.elm --open --pushstate --output=elm-todo.js",
+    "elm-debug": "elm-live src/Main.elm --open --pushstate --debug --output=elm-todo.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
